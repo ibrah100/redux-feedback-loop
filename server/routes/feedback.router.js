@@ -5,33 +5,41 @@ const pool = require('../modules/pool');
 
 // GET
 router.get('/', (req, res) => {
-  let queryText = 'SELECT * FROM "feedback" ORDER BY "date";';
-  pool.query(queryText).then(result => {
-    // Sends back the results in an object
-    res.send(result.rows);
+  let sqlQuery = `
+  SELECT * from "feedback"
+  ORDER BY "date" DESC
+  `;
+  pool.query(sqlQuery)
+  .then((dbRes) => {
+      res.send(dbRes);
   })
-  .catch(error => {
-    console.log('error getting feedback', error);
-    res.sendStatus(500);
-  });
-});
+  .catch((dbErr) => {
+      console.log('Error in GET ROUTE', dbErr)
+      res.sendStatus(500);
+  })
+})
 
 // POST
-router.post('/',  (req, res) => {
-  let newFeedback = req.body;
-  console.log(`Adding feedback`, newFeedback);
-
-  let queryText = `INSERT INTO "feedback" ("feeling", "understanding", "support", "comments")
-                   VALUES ($1, $2, $3, $4);`;
-  pool.query(queryText, [newFeedback.feelings, newFeedback.understanding, newFeedback.support, newFeedback.comments])
-    .then(result => {
+router.post('/', (req, res) => {
+  let feeling = req.body.feeling;
+  let understanding = req.body.understanding;
+  let support = req.body.support;
+  let comments = req.body.comments;
+  let sqlQuery = `
+  INSERT INTO "feedback"
+  ("feeling", "understanding", "support", "comments")
+  VALUES ($1, $2, $3, $4)
+  `;
+  let sqlValues = [feeling, understanding, support, comments];
+  pool.query(sqlQuery, sqlValues)
+  .then((dbRes) => {
       res.sendStatus(201);
-    })
-    .catch(error => {
-      console.log(`Error adding new feedback`, error);
+  }) 
+  .catch((dbErr) => {
+      console.log('Error in POST ROUTE', dbErr);
       res.sendStatus(500);
-    });
-});
+  })
+}) 
 
 // DELETE
 router.delete('/:id', (req, res) => {
